@@ -7,6 +7,10 @@ import kotlinx.serialization.Serializable
  */
 sealed interface Route {
 
+    // Loading screen
+    @Serializable
+    data object Loading : Route
+
     // Auth routes
     @Serializable
     data object Page1 : Route  // Login/Entry

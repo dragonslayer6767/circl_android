@@ -59,6 +59,7 @@ import com.fragne.circl_app.ui.circles.home.DashboardMemberListScreen
 import com.fragne.circl_app.ui.circles.home.CircleDuesScreen
 import com.fragne.circl_app.ui.profile.DynamicProfilePreviewScreen
 import com.fragne.circl_app.ui.profile.FullProfile
+import com.fragne.circl_app.ui.loading.LoadingScreen
 
 /**
  * Temporary holder for passing complex objects through navigation
@@ -82,8 +83,26 @@ fun RootNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) Route.Network else Route.Page1
+        startDestination = Route.Loading // Always start with loading screen
     ) {
+        // Loading Screen - First screen shown on app launch
+        composable<Route.Loading> {
+            LoadingScreen(
+                onLoadingComplete = {
+                    // Navigate to appropriate screen after loading
+                    if (isLoggedIn) {
+                        navController.navigate(Route.Network) {
+                            popUpTo(Route.Loading) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Route.Page1) {
+                            popUpTo(Route.Loading) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
         // Page1 - Login/Entry Screen
         composable<Route.Page1> {
             Page1Screen(
