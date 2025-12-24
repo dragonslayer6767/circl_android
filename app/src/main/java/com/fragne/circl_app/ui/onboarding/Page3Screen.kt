@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,6 +17,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
+import com.fragne.circl_app.tutorial.TutorialManager
+import com.fragne.circl_app.tutorial.models.OnboardingData
 import com.fragne.circl_app.ui.components.CloudBackground
 import com.fragne.circl_app.ui.theme.CirclBlue
 import com.fragne.circl_app.ui.theme.CirclYellow
@@ -29,6 +32,9 @@ import com.fragne.circl_app.ui.theme.CirclWhite
 fun Page3Screen(
     onNavigateToNext: () -> Unit
 ) {
+    val context = LocalContext.current
+    val tutorialManager = remember { TutorialManager.getInstance(context) }
+
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -327,7 +333,33 @@ fun Page3Screen(
                             alertMessage = "Please select your industry interest"
                             showAlert = true
                         }
-                        else -> onNavigateToNext()
+                        else -> {
+                            // Create onboarding data
+                            val onboardingData = OnboardingData(
+                                usageInterests = selectedUsageInterest ?: "",
+                                industryInterests = selectedIndustryInterest ?: "",
+                                location = "", // Add location if captured in future
+                                userGoals = null
+                            )
+
+                            // Detect and set user type for tutorial
+                            tutorialManager.detectAndSetUserType(onboardingData)
+
+                            // Mark that onboarding was just completed to trigger tutorial
+                            val sharedPreferences = context.getSharedPreferences(
+                                "tutorial_preferences",
+                                android.content.Context.MODE_PRIVATE
+                            )
+                            sharedPreferences.edit()
+                                .putBoolean("just_completed_onboarding", true)
+                                .putBoolean("onboarding_completed", true)
+                                .apply()
+
+                            android.util.Log.d("Page3Screen", "✅ Onboarding completed - Tutorial will trigger after login")
+
+                            // Navigate to next page
+                            onNavigateToNext()
+                        }
                     }
                 },
                 modifier = Modifier

@@ -20,11 +20,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.fragne.circl_app.tutorial.TutorialManager
+import com.fragne.circl_app.tutorial.models.UserType as TutorialUserType
 import com.fragne.circl_app.ui.subscription.SubscriptionManager
 import com.fragne.circl_app.ui.subscription.SubscriptionPaywallDialog
 import com.fragne.circl_app.ui.subscription.UserType
@@ -33,6 +36,7 @@ import com.fragne.circl_app.ui.subscription.UserType
  * Settings Screen
  * Translated from PageSettings.swift
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateToProfile: () -> Unit = {},
@@ -52,7 +56,15 @@ fun SettingsScreen(
     userProfileImageUrl: String = "",
     unreadMessageCount: Int = 0
 ) {
+    val context = LocalContext.current
+    val tutorialManager = remember { TutorialManager.getInstance(context) }
+    val currentUserType by tutorialManager.userType.collectAsState()
+
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showTutorialDialog by remember { mutableStateOf(false) }
+    var selectedTutorialType by remember { mutableStateOf(currentUserType) }
+    var showTutorialTypeDropdown by remember { mutableStateOf(false) }
+
     val primaryBlue = Color(0xFF004AAD)
 
     var accountSettingsTapCount by remember { mutableIntStateOf(0) }
@@ -218,9 +230,10 @@ fun SettingsScreen(
                         icon = Icons.AutoMirrored.Filled.Help
                     ) {
                         SettingsOption(
-                            title = "App Tutorial",
-                            icon = Icons.AutoMirrored.Filled.Help,
-                            onClick = onNavigateToTutorial
+                            title = "Start Tutorial",
+                            subtitle = "${currentUserType.displayName} Tutorial",
+                            icon = Icons.Filled.School,
+                            onClick = { showTutorialDialog = true }
                         )
                     }
                 }
@@ -294,6 +307,109 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    // Tutorial selection dialog
+    if (showTutorialDialog) {
+        AlertDialog(
+            onDismissRequest = { showTutorialDialog = false },
+            title = {
+                Text(
+                    text = "Start Tutorial",
+                    fontWeight = FontWeight.Bold,
+                    color = primaryBlue
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Choose which tutorial you'd like to experience:",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+
+                    // Tutorial type dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = showTutorialTypeDropdown,
+                        onExpandedChange = { showTutorialTypeDropdown = it }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedTutorialType.displayName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Tutorial Type") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showTutorialTypeDropdown)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                focusedLabelColor = primaryBlue
+                            )
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = showTutorialTypeDropdown,
+                            onDismissRequest = { showTutorialTypeDropdown = false }
+                        ) {
+                            TutorialUserType.entries.forEach { userType ->
+                                DropdownMenuItem(
+                                    text = { Text(userType.displayName) },
+                                    onClick = {
+                                        selectedTutorialType = userType
+                                        showTutorialTypeDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Tutorial description
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = primaryBlue.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Text(
+                            text = getTutorialDescription(selectedTutorialType),
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                            color = primaryBlue,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showTutorialDialog = false
+                        tutorialManager.restartTutorial(selectedTutorialType)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = primaryBlue
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Start Tutorial")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showTutorialDialog = false }
+                ) {
+                    Text("Cancel", color = primaryBlue)
+                }
+            }
+        )
     }
 
     // Logout confirmation dialog
@@ -611,3 +727,30 @@ private fun SettingsOption(
     }
 }
 
+/**
+ * Get tutorial description for each user type
+ */
+private fun getTutorialDescription(userType: TutorialUserType): String {
+    return when (userType) {
+        TutorialUserType.ENTREPRENEUR ->
+            "Learn how to find co-founders, connect with investors, showcase your venture, and leverage Circl's tools to grow your startup."
+
+        TutorialUserType.STUDENT ->
+            "Discover how to find mentors, learn from experienced entrepreneurs, and accelerate your learning journey on Circl."
+
+        TutorialUserType.STUDENT_ENTREPRENEUR ->
+            "Get a comprehensive guide for building your startup while in school, finding co-founders, and balancing both worlds."
+
+        TutorialUserType.MENTOR ->
+            "Learn how to share your knowledge, find mentees, and make an impact by guiding the next generation of entrepreneurs."
+
+        TutorialUserType.INVESTOR ->
+            "Discover how to find investment opportunities, connect directly with founders, and access quality deal flow on Circl."
+
+        TutorialUserType.COMMUNITY_BUILDER ->
+            "Get a complete overview of Circl's features and learn how to connect, engage, and grow within the community."
+
+        TutorialUserType.OTHER ->
+            "Get a complete overview of Circl's features and learn how to make the most of the platform."
+    }
+}

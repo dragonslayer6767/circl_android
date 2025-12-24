@@ -360,7 +360,70 @@ sealed class BottomNavItem(
 fun MainScreen(
     navController: NavHostController
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tutorialManager = remember { com.fragne.circl_app.tutorial.TutorialManager.getInstance(context) }
+
     val mainNavController = rememberNavController()
+
+    // Set up navigation callback for tutorial
+    LaunchedEffect(mainNavController) {
+        tutorialManager.setNavigationCallback { destination ->
+            // Map tutorial destination strings to Route objects
+            when (destination) {
+                "PageForum" -> mainNavController.navigate(Route.Forum) {
+                    popUpTo(mainNavController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+                "PageUnifiedNetworking" -> mainNavController.navigate(Route.Network) {
+                    popUpTo(mainNavController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+                "PageCircles" -> mainNavController.navigate(Route.Circles) {
+                    popUpTo(mainNavController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+                "PageBusinessProfile", "PageEntrepreneurResources" -> {
+                    // Navigate to More/Growth Hub for now
+                    mainNavController.navigate(Route.More) {
+                        popUpTo(mainNavController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+                "PageMessages" -> {
+                    // Navigate to Messages screen via the main nav controller
+                    navController.navigate(Route.Messages)
+                }
+                "PageSettings" -> mainNavController.navigate(Route.Settings) {
+                    popUpTo(mainNavController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+                else -> {
+                    android.util.Log.w("TutorialNavigation", "Unknown destination: $destination")
+                }
+            }
+        }
+    }
+
+    // Trigger tutorial check after app is ready
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1500) // Wait for UI to settle
+        tutorialManager.checkAndTriggerTutorial()
+    }
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
 
     val bottomNavItems = listOf(
@@ -371,35 +434,36 @@ fun MainScreen(
         BottomNavItem.Settings
     )
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                bottomNavItems.forEach { item ->
-                    val selected = navBackStackEntry?.destination?.route?.contains(item.route::class.simpleName ?: "") == true
+    Box(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+        Scaffold(
+            bottomBar = {
+                NavigationBar {
+                    bottomNavItems.forEach { item ->
+                        val selected = navBackStackEntry?.destination?.route?.contains(item.route::class.simpleName ?: "") == true
 
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.title
-                            )
-                        },
-                        label = { Text(item.title) },
-                        selected = selected,
-                        onClick = {
-                            mainNavController.navigate(item.route) {
-                                popUpTo(mainNavController.graph.findStartDestination().id) {
-                                    saveState = true
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.title
+                                )
+                            },
+                            label = { Text(item.title) },
+                            selected = selected,
+                            onClick = {
+                                mainNavController.navigate(item.route) {
+                                    popUpTo(mainNavController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
-        }
-    ) { paddingValues ->
+        ) { paddingValues ->
         NavHost(
             navController = mainNavController,
             startDestination = Route.Forum, // Start with Home (Forum)
@@ -742,7 +806,13 @@ fun MainScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-        }
-    }
-}
+        } // NavHost closes
+        } // Scaffold content lambda closes
+
+    // Tutorial overlay (shown on top of everything)
+    com.fragne.circl_app.tutorial.ui.TutorialOverlay(
+        tutorialManager = tutorialManager
+    )
+  } // Box closes
+} // MainScreen function closes
 
