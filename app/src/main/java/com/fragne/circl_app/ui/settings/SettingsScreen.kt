@@ -23,7 +23,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.fragne.circl_app.ui.subscription.SubscriptionManager
+import com.fragne.circl_app.ui.subscription.SubscriptionPaywallDialog
+import com.fragne.circl_app.ui.subscription.UserType
 
 /**
  * Settings Screen
@@ -52,6 +56,14 @@ fun SettingsScreen(
     val primaryBlue = Color(0xFF004AAD)
 
     var accountSettingsTapCount by remember { mutableIntStateOf(0) }
+
+    // Subscription Manager
+    val subscriptionManager = viewModel<SubscriptionManager>()
+
+    // Show subscription paywall dialog
+    SubscriptionPaywallDialog(
+        subscriptionManager = subscriptionManager
+    )
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -119,6 +131,39 @@ fun SettingsScreen(
                             onClick = onNavigateToDeleteAccount,
                             isDestructive = true,
                             subtitle = "This action cannot be undone"
+                        )
+                    }
+                }
+
+                // Subscription Section
+                item {
+                    SettingsSection(
+                        title = "Subscription",
+                        icon = Icons.Filled.Stars
+                    ) {
+                        SettingsOption(
+                            title = "Upgrade to Premium",
+                            subtitle = "Unlock exclusive features and benefits",
+                            icon = Icons.Filled.Upgrade,
+                            onClick = {
+                                // Detect user type - TODO: Get from actual user profile
+                                val userType = UserType.ENTREPRENEUR
+                                subscriptionManager.showPaywall(userType)
+                            },
+                            trailingContent = {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color(0xFFFFD700).copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "PRO",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFFD700),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
                         )
                     }
                 }
@@ -481,7 +526,8 @@ private fun SettingsOption(
     icon: ImageVector,
     onClick: () -> Unit,
     isDestructive: Boolean = false,
-    subtitle: String? = null
+    subtitle: String? = null,
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
     val primaryBlue = Color(0xFF004AAD)
     val lightBlue = Color(0xFF0066FF)
@@ -550,13 +596,17 @@ private fun SettingsOption(
                 }
             }
 
-            // Chevron
-            Icon(
-                imageVector = Icons.Filled.ChevronRight,
-                contentDescription = null,
-                tint = Color.Gray,
-                modifier = Modifier.size(14.dp)
-            )
+            // Trailing content or chevron
+            if (trailingContent != null) {
+                trailingContent()
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
         }
     }
 }

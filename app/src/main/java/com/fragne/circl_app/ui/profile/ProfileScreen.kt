@@ -23,7 +23,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.fragne.circl_app.ui.subscription.SubscriptionManager
+import com.fragne.circl_app.ui.subscription.SubscriptionPaywallDialog
+import com.fragne.circl_app.ui.subscription.UserType
 
 /**
  * Profile Page - User's personal profile
@@ -44,6 +48,9 @@ fun ProfileScreen(
     var currentTab by remember { mutableStateOf("profile") } // "profile" or "business"
     var isEditing by remember { mutableStateOf(false) }
 
+    // Subscription Manager
+    val subscriptionManager = viewModel<SubscriptionManager>()
+
     // Mock data - TODO: Replace with ViewModel
     var bio by remember { mutableStateOf("Passionate entrepreneur building the future of tech.") }
     var firstName by remember { mutableStateOf("John") }
@@ -58,6 +65,11 @@ fun ProfileScreen(
 
     val primaryBlue = Color(0xFF004AAD)
     val lightBlue = Color(0xFF0066FF)
+
+    // Show subscription paywall dialog
+    SubscriptionPaywallDialog(
+        subscriptionManager = subscriptionManager
+    )
 
     Scaffold(
         topBar = {
@@ -243,7 +255,17 @@ fun ProfileScreen(
 
             // Premium Button
             item {
-                PremiumButton(onClick = onNavigateToPremium)
+                PremiumButton(
+                    onClick = {
+                        // Detect user type based on profile data
+                        // TODO: This should come from actual user data/preferences
+                        val userType = UserType.detectUserType(
+                            usageInterests = "entrepreneur",
+                            industryInterests = "technology"
+                        )
+                        subscriptionManager.showPaywall(userType)
+                    }
+                )
             }
 
             // Bio Section
