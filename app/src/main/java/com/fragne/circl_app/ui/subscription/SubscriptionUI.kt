@@ -2,6 +2,7 @@ package com.fragne.circl_app.ui.subscription
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,17 +22,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fragne.circl_app.R
 
 /**
  * Subscription Paywall Dialog
@@ -112,7 +114,7 @@ private fun PaywallBackgroundView(content: SubscriptionContent) {
     // Get random background image for this user type
     val imageRes = remember { getRandomBackgroundImageRes(content.backgroundImage) }
 
-    androidx.compose.foundation.Image(
+    Image(
         painter = painterResource(id = imageRes),
         contentDescription = null,
         modifier = Modifier.fillMaxSize(),
@@ -229,7 +231,7 @@ private fun PaywallContentView(
                         plan = plan,
                         isSelected = selectedPlan?.id == plan.id,
                         onSelect = { subscriptionManager.selectPlan(plan) },
-                        modifier = Modifier.width(280.dp)
+                        modifier = Modifier.width(300.dp)
                     )
                 }
             }
@@ -321,153 +323,166 @@ private fun SubscriptionPlanCard(
         label = "cardScale"
     )
 
-    Card(
+    Column(
         modifier = modifier
             .scale(scale)
-            .clickable(onClick = onSelect),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF004AAD).copy(alpha = 0.15f)
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 6.dp else 4.dp
-        )
+            .clickable(onClick = onSelect)
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF004AAD).copy(alpha = 0.25f),
+                        Color(0xFF0066FF).copy(alpha = 0.15f)
+                    ),
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .border(
+                width = if (isSelected) 3.dp else 1.dp,
+                brush = if (isSelected) {
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFFFEB3B).copy(alpha = 0.9f), // Yellow
+                            Color(0xFFFFA500).copy(alpha = 0.8f), // Orange
+                            Color(0xFFFFEB3B).copy(alpha = 0.7f)  // Yellow
+                        ),
+                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                    )
+                } else {
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF004AAD).copy(alpha = 0.3f),
+                            Color(0xFF0066FF).copy(alpha = 0.2f)
+                        ),
+                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                    )
+                },
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(20.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    width = if (isSelected) 3.dp else 1.dp,
-                    brush = if (isSelected) {
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFFFFD700),
-                                Color(0xFFFFA500),
-                                Color(0xFFFFD700)
-                            )
-                        )
-                    } else {
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF004AAD).copy(alpha = 0.3f),
-                                Color(0xFF0066FF).copy(alpha = 0.2f)
-                            )
-                        )
-                    },
-                    shape = RoundedCornerShape(16.dp)
-                )
+        // Header with pricing
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-            ) {
-                // Header with pricing
+            Column {
+                Text(
+                    text = plan.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF004AAD)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Column {
+                    Text(
+                        text = plan.price,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF004AAD)
+                    )
+                    // Show period only when provided
+                    if (plan.period.trim().isNotEmpty()) {
                         Text(
-                            text = plan.title,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF004AAD)
+                            text = "/${plan.period}",
+                            fontSize = 16.sp,
+                            color = Color(0xFF0066FF)
+                        )
+                    }
+                }
+
+                // Original price and discount
+                if (plan.originalPrice != null && plan.discount != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = plan.originalPrice,
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            style = LocalTextStyle.current.copy(
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
+                            )
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            Text(
-                                text = plan.price,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF004AAD)
-                            )
-                            Text(
-                                text = "/${plan.period}",
-                                fontSize = 16.sp,
-                                color = Color(0xFF0066FF)
-                            )
-                        }
-
-                        // Original price and discount
-                        if (plan.originalPrice != null && plan.discount != null) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = plan.originalPrice,
-                                    fontSize = 14.sp,
-                                    color = Color.Gray,
-                                    style = LocalTextStyle.current.copy(
-                                        textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
-                                    )
-                                )
-
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Color.Green.copy(alpha = 0.2f)
-                                ) {
-                                    Text(
-                                        text = plan.discount,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Green,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Popular badge
-                    if (plan.isPopular) {
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = Color(0xFFFFA500)
+                            color = Color(0xFF34C759).copy(alpha = 0.2f)
                         ) {
                             Text(
-                                text = "POPULAR",
-                                fontSize = 10.sp,
+                                text = plan.discount,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = Color(0xFF34C759),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-                // Features
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Popular badge in header
+            if (plan.isPopular) {
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFFFFA500)
                 ) {
-                    plan.features.forEach { feature ->
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                Icons.Filled.Check,
-                                contentDescription = null,
-                                tint = Color.Green,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = feature,
-                                fontSize = 14.sp,
-                                color = Color(0xFF004AAD).copy(alpha = 0.8f)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "POPULAR",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Features - Scrollable section with constrained height
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 200.dp) // Constrain scroll area height to match iOS
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            plan.features.forEach { feature ->
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF34C759),
+                        modifier = Modifier
+                            .size(12.dp)
+                            .padding(top = 2.dp)
+                    )
+                    Text(
+                        text = feature,
+                        fontSize = 14.sp,
+                        color = Color(0xFF004AAD).copy(alpha = 0.8f)
+                    )
+                }
+            }
+
+            // Extra bottom padding for scroll comfort (iOS has .padding(.bottom, 8))
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
