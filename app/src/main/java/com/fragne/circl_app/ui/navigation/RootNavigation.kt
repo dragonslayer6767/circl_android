@@ -72,7 +72,7 @@ object NavigationHelper {
 
 /**
  * Root navigation composable - Onboarding flow
- * Flow: Page1 → Page17 → Page14 → Page3 → Page4 → Page5 → Page13 → Page19
+ * Flow: Page1 → Page14 → Page3 → Page4 → Page5 → Page13 → Page19
  */
 @Composable
 fun RootNavigation(
@@ -107,7 +107,7 @@ fun RootNavigation(
         composable<Route.Page1> {
             Page1Screen(
                 onNavigateToSignup = {
-                    navController.navigate(Route.Page17) {
+                    navController.navigate(Route.Page14) {
                         popUpTo(Route.Page1) { inclusive = false }
                     }
                 },
@@ -119,14 +119,6 @@ fun RootNavigation(
             )
         }
 
-        // Page17 - Ethics Screen
-        composable<Route.Page17> {
-            Page17Screen(
-                onNavigateToNext = {
-                    navController.navigate(Route.Page14)
-                }
-            )
-        }
 
         // Page14 - Terms & Conditions
         composable<Route.Page14> {
