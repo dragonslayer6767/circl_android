@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -71,7 +70,6 @@ fun Page1Screen(
                 Box(
                     modifier = Modifier
                         .size(220.dp)
-                        .shadow(10.dp, CircleShape)
                         .background(CirclWhite, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -90,8 +88,7 @@ fun Page1Screen(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = CirclWhite,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.shadow(3.dp)
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -101,8 +98,7 @@ fun Page1Screen(
             Button(
                 onClick = onNavigateToSignup,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(5.dp, RoundedCornerShape(15.dp)),
+                    .fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = CirclYellow
                 ),
@@ -122,8 +118,7 @@ fun Page1Screen(
             // Login Card
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(10.dp, RoundedCornerShape(25.dp)),
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(25.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = CirclWhite.copy(alpha = 0.15f)
@@ -139,8 +134,7 @@ fun Page1Screen(
                         onValueChange = { email = it },
                         placeholder = { Text("Email", color = CirclBlue.copy(alpha = 0.6f)) },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(3.dp, RoundedCornerShape(15.dp)),
+                            .fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = CirclWhite.copy(alpha = 0.95f),
                             unfocusedContainerColor = CirclWhite.copy(alpha = 0.95f),
@@ -163,8 +157,7 @@ fun Page1Screen(
                         onValueChange = { password = it },
                         placeholder = { Text("Password", color = CirclBlue.copy(alpha = 0.6f)) },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(3.dp, RoundedCornerShape(15.dp)),
+                            .fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = CirclWhite.copy(alpha = 0.95f),
                             unfocusedContainerColor = CirclWhite.copy(alpha = 0.95f),
@@ -195,8 +188,7 @@ fun Page1Screen(
                             onNavigateToMain()
                         },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(5.dp, RoundedCornerShape(15.dp)),
+                            .fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = CirclYellow
                         ),
